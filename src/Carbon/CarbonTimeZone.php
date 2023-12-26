@@ -89,7 +89,8 @@ class CarbonTimeZone extends DateTimeZone
     {
         $tz = $object;
 
-        if ($tz instanceof static) {
+        $tmp = static::class;
+        if ($tz instanceof $tmp) {
             return $tz;
         }
 

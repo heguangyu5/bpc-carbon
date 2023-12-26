@@ -23,17 +23,6 @@ use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
 use Symfony\Contracts\Translation\TranslatorInterface as ContractsTranslatorInterface;
 
-// @codeCoverageIgnoreStart
-if (interface_exists('Symfony\\Contracts\\Translation\\TranslatorInterface') &&
-    !interface_exists('Symfony\\Component\\Translation\\TranslatorInterface')
-) {
-    class_alias(
-        'Symfony\\Contracts\\Translation\\TranslatorInterface',
-        'Symfony\\Component\\Translation\\TranslatorInterface'
-    );
-}
-// @codeCoverageIgnoreEnd
-
 /**
  * Trait Localization.
  *
@@ -371,8 +360,8 @@ trait Localization
                     $list = $messages[$variable.'_standalone'] ?? null;
 
                     if ($list) {
-                        foreach ($$variable as $index => &$name) {
-                            $name .= '|'.$messages[$variable.'_standalone'][$index];
+                        foreach ($$variable as $index => $name) {
+                            $$variable[$index] .= '|'.$messages[$variable.'_standalone'][$index];
                         }
                     }
                 }
@@ -755,9 +744,9 @@ trait Localization
      */
     private static function getFromCatalogue($translator, $catalogue, string $id, string $domain = 'messages')
     {
-        return $translator instanceof TranslatorStrongTypeInterface
+        return /*$translator instanceof TranslatorStrongTypeInterface
             ? $translator->getFromCatalogue($catalogue, $id, $domain) // @codeCoverageIgnore
-            : $catalogue->get($id, $domain);
+            : */$catalogue->get($id, $domain);
     }
 
     /**
@@ -825,7 +814,8 @@ trait Localization
         $date = static::now();
 
         for ($i = 0; $i < $length; $i++) {
-            $list[] = $translation($date, $timeString, $i) ?? $filler;
+            $tmp = $translation($date, $timeString, $i);
+            $list[] = $tmp ?? $filler;
         }
 
         return $list;

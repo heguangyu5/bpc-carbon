@@ -1042,7 +1042,8 @@ trait Comparison
             'microsecond' => [0, 'second'],
         ];
 
-        foreach ($units as $unit => [$minimum, $startUnit]) {
+        foreach ($units as $unit => $item) {
+            [$minimum, $startUnit] = $item;
             if ($minimum === $median->$unit) {
                 $current = $current->startOf($startUnit);
 

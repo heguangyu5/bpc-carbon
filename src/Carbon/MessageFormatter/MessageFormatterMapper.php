@@ -15,6 +15,10 @@ use ReflectionMethod;
 use Symfony\Component\Translation\Formatter\MessageFormatter;
 use Symfony\Component\Translation\Formatter\MessageFormatterInterface;
 
+if (defined('__BPC__')) {
+    require 'Carbon/MessageFormatter/MessageFormatterMapperStrongType.php';
+} else {
+
 // @codeCoverageIgnoreStart
 $transMethod = new ReflectionMethod(MessageFormatterInterface::class, 'format');
 
@@ -22,6 +26,8 @@ require $transMethod->getParameters()[0]->hasType()
     ? __DIR__.'/../../../lazy/Carbon/MessageFormatter/MessageFormatterMapperStrongType.php'
     : __DIR__.'/../../../lazy/Carbon/MessageFormatter/MessageFormatterMapperWeakType.php';
 // @codeCoverageIgnoreEnd
+
+}
 
 final class MessageFormatterMapper extends LazyMessageFormatter
 {

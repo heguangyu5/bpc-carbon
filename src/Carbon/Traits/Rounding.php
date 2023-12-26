@@ -81,7 +81,8 @@ trait Rounding
         $changes = [];
         $minimumInc = null;
 
-        foreach ($ranges as $unit => [$minimum, $maximum]) {
+        foreach ($ranges as $unit => $item) {
+            [$minimum, $maximum] = $item;
             if ($normalizedUnit === $unit) {
                 $arguments = [$this->$unit, $minimum];
                 $initialValue = $this->$unit;

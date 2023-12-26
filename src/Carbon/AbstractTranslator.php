@@ -220,16 +220,25 @@ abstract class AbstractTranslator extends Translation\Translator
         }
 
         $catalogue = $this->getCatalogue($locale);
-        $format = $this instanceof TranslatorStrongTypeInterface
+        $format = /*$this instanceof TranslatorStrongTypeInterface
             ? $this->getFromCatalogue($catalogue, (string) $id, $domain)
-            : $this->getCatalogue($locale)->get((string) $id, $domain); // @codeCoverageIgnore
+            : */$this->getCatalogue($locale)->get((string) $id, $domain); // @codeCoverageIgnore
 
         if ($format instanceof Closure) {
             // @codeCoverageIgnoreStart
-            try {
-                $count = (new ReflectionFunction($format))->getNumberOfRequiredParameters();
-            } catch (ReflectionException $exception) {
-                $count = 0;
+            if (defined('__BPC__')) {
+                $numArgs = bpc_is_callable_num_args($format);
+                if ($numArgs) {
+                    $count = $numArgs['min'];
+                } else {
+                    $count = 0;
+                }
+            } else {
+                try {
+                    $count = (new ReflectionFunction($format))->getNumberOfRequiredParameters();
+                } catch (ReflectionException $exception) {
+                    $count = 0;
+                }
             }
             // @codeCoverageIgnoreEnd
 

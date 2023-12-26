@@ -336,7 +336,8 @@ class CarbonInterval extends DateInterval implements CarbonConverterInterface
         if (!self::$flipCascadeFactors) {
             self::$flipCascadeFactors = [];
 
-            foreach (static::getCascadeFactors() as $to => [$factor, $from]) {
+            foreach (static::getCascadeFactors() as $to => $item) {
+                [$factor, $from] = $item;
                 self::$flipCascadeFactors[self::standardizeUnit($from)] = [self::standardizeUnit($to), $factor];
             }
         }
@@ -1067,7 +1068,8 @@ class CarbonInterval extends DateInterval implements CarbonConverterInterface
      */
     public static function instance(DateInterval $interval, array $skip = [], bool $skipCopy = false)
     {
-        if ($skipCopy && $interval instanceof static) {
+        $tmp = static::class;
+        if ($skipCopy && $interval instanceof $tmp) {
             return $interval;
         }
 
@@ -1122,12 +1124,12 @@ class CarbonInterval extends DateInterval implements CarbonConverterInterface
         }
 
         // @codeCoverageIgnoreStart
-        try {
+//        try {
             /** @var static $interval */
             $interval = static::createFromDateString($interval);
-        } catch (DateMalformedIntervalStringException $e) {
-            return null;
-        }
+//        } catch (DateMalformedIntervalStringException $e) {
+//            return null;
+//        }
         // @codeCoverageIgnoreEnd
 
         return !$interval || $interval->isEmpty() ? null : $interval;
@@ -1562,7 +1564,13 @@ class CarbonInterval extends DateInterval implements CarbonConverterInterface
     protected function getForHumansParameters($syntax = null, $short = false, $parts = -1, $options = null)
     {
         $optionalSpace = ' ';
-        $default = $this->getTranslationMessage('list.0') ?? $this->getTranslationMessage('list') ?? ' ';
+        $default = $this->getTranslationMessage('list.0');
+        if ($default === null) {
+            $default = $this->getTranslationMessage('list');
+            if ($default === null) {
+                $default = ' ';
+            }
+        }
         $join = $default === '' ? '' : ' ';
         $altNumbers = false;
         $aUnit = false;
@@ -1588,9 +1596,10 @@ class CarbonInterval extends DateInterval implements CarbonConverterInterface
         if ($join === false) {
             $join = ' ';
         } elseif ($join === true) {
+            $tmp = $this->getTranslationMessage('list.1');
             $join = [
                 $default,
-                $this->getTranslationMessage('list.1') ?? $default,
+                $tmp ?? $default,
             ];
         }
 
@@ -1844,7 +1853,7 @@ class CarbonInterval extends DateInterval implements CarbonConverterInterface
         ];
 
         if (!empty($skip)) {
-            foreach ($diffIntervalArray as $index => &$unitData) {
+            foreach ($diffIntervalArray as $index => $unitData) {
                 $nextIndex = $index + 1;
 
                 if ($unitData['value'] &&
@@ -1853,7 +1862,7 @@ class CarbonInterval extends DateInterval implements CarbonConverterInterface
                 ) {
                     $diffIntervalArray[$nextIndex]['value'] += $unitData['value'] *
                         self::getFactorWithDefault($diffIntervalArray[$nextIndex]['unit'], $unitData['unit']);
-                    $unitData['value'] = 0;
+                    $diffIntervalArray[$index]['value'] = 0;
                 }
             }
         }
@@ -1908,8 +1917,8 @@ class CarbonInterval extends DateInterval implements CarbonConverterInterface
 
         $actualParts = \count($interval);
 
-        foreach ($interval as $index => &$item) {
-            $item = $transChoice($item[0], $item[1], $index, $actualParts);
+        foreach ($interval as $index => $item) {
+            $interval[$index] = $transChoice($item[0], $item[1], $index, $actualParts);
         }
 
         if (\count($interval) === 0) {
@@ -2418,7 +2427,8 @@ class CarbonInterval extends DateInterval implements CarbonConverterInterface
         $newData = $originalData;
         $previous = [];
 
-        foreach (self::getFlipCascadeFactors() as $source => [$target, $factor]) {
+        foreach (self::getFlipCascadeFactors() as $source => $item) {
+            [$target, $factor] = $item;
             foreach (['source', 'target'] as $key) {
                 if ($$key === 'dayz') {
                     $$key = 'daysExcludeWeeks';
@@ -2435,7 +2445,8 @@ class CarbonInterval extends DateInterval implements CarbonConverterInterface
             if ($decimalPart !== 0.0) {
                 $unit = $source;
 
-                foreach ($previous as [$subUnit, $subFactor]) {
+                foreach ($previous as $item2) {
+                    [$subUnit, $subFactor] = $item2;
                     $newData[$unit] -= $decimalPart;
                     $newData[$subUnit] += $decimalPart * $subFactor;
                     $decimalPart = fmod($newData[$subUnit], 1);
@@ -2462,7 +2473,8 @@ class CarbonInterval extends DateInterval implements CarbonConverterInterface
                         continue;
                     }
 
-                    if (($value > 0) !== $positive) {
+                    $isValuePositive = $value > 0;
+                    if ($isValuePositive !== $positive) {
                         return $this->invertCascade($originalData)
                             ->solveNegativeInterval();
                     }
@@ -2548,7 +2560,8 @@ class CarbonInterval extends DateInterval implements CarbonConverterInterface
             $values['weeks'] = 0;
         }
 
-        foreach ($factors as $source => [$target, $factor]) {
+        foreach ($factors as $source => $item) {
+            [$target, $factor] = $item;
             if ($source === $realUnit) {
                 $unitFound = true;
                 $value = $values[$source];

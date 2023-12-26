@@ -1,3 +1,11 @@
+# BPC Notes: How to make?
+
+```shell
+cd src/Carbon/
+make libcarbon.so && sudo make install-libcarbon
+sudo ldconfig
+```
+
 # Carbon
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/nesbot/carbon.svg?style=flat-square)](https://packagist.org/packages/nesbot/carbon)

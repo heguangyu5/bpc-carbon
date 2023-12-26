@@ -88,7 +88,8 @@ trait Serialization
     {
         $instance = @unserialize((string) $value);
 
-        if (!$instance instanceof static) {
+        $tmp = static::class;
+        if (!$instance instanceof $tmp) {
             throw new InvalidFormatException("Invalid serialized value: $value");
         }
 
@@ -195,8 +196,7 @@ trait Serialization
             } catch (Throwable $exception) {
                 try {
                     // FatalError occurs when calling msgpack_unpack() in PHP 7.4 or later.
-                    ['date' => $date, 'timezone' => $timezone] = $this->dumpDateProperties;
-                    parent::__construct($date, unserialize($timezone));
+                    parent::__construct($this->dumpDateProperties['date'], unserialize($this->dumpDateProperties['timezone']));
                 } catch (Throwable $ignoredException) {
                     throw $exception;
                 }
@@ -233,8 +233,7 @@ trait Serialization
 
             try {
                 // FatalError occurs when calling msgpack_unpack() in PHP 7.4 or later.
-                ['date' => $date, 'timezone' => $timezone] = $data['dumpDateProperties'];
-                $this->__construct($date, unserialize($timezone));
+                $this->__construct($data['dumpDateProperties']['date'], unserialize($data['dumpDateProperties']['timezone']));
             } catch (Throwable $ignoredException) {
                 throw $exception;
             }

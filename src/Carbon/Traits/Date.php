@@ -833,7 +833,7 @@ trait Date
      */
     public function get($name)
     {
-        static $formats = [
+        $formats = [
             // @property int
             'year' => 'Y',
             // @property int
@@ -979,11 +979,26 @@ trait Date
 
             // @property-read int 0 through 6
             case $name === 'firstWeekDay':
-                return $this->localTranslator ? ($this->getTranslationMessage('first_day_of_week') ?? 0) : static::getWeekStartsAt();
-
+                if ($this->localTranslator) {
+                    $tmp = $this->getTranslationMessage('first_day_of_week');
+                    if ($tmp === null) {
+                        return 0;
+                    }
+                    return $tmp;
+                } else {
+                    return static::getWeekStartsAt();
+                }
             // @property-read int 0 through 6
             case $name === 'lastWeekDay':
-                return $this->localTranslator ? (($this->getTranslationMessage('first_day_of_week') ?? 0) + static::DAYS_PER_WEEK - 1) % static::DAYS_PER_WEEK : static::getWeekEndsAt();
+                if ($this->localTranslator) {
+                    $tmp = $this->getTranslationMessage('first_day_of_week');
+                    if ($tmp === null) {
+                        $tmp = 0;
+                    }
+                    return ($tmp + static::DAYS_PER_WEEK - 1) % static::DAYS_PER_WEEK;
+                } else {
+                    return static::getWeekEndsAt();
+                }
 
             // @property int 1 through 366
             case $name === 'dayOfYear':
@@ -1091,7 +1106,7 @@ trait Date
     {
         try {
             $this->__get($name);
-        } catch (UnknownGetterException | ReflectionException $e) {
+        } catch (UnknownGetterException/* | ReflectionException */$e) {
             return false;
         }
 
@@ -1361,7 +1376,12 @@ trait Date
             return $this->dayOfWeek;
         }
 
-        $firstDay = (int) ($this->getTranslationMessage('first_day_of_week') ?? 0);
+        $firstDay = $this->getTranslationMessage('first_day_of_week');
+        if ($firstDay === null) {
+            $firstDay = 0;
+        } else {
+            $firstDay = (int)$firstDay;
+        }
         $dayOfWeek = ($this->dayOfWeek + 7 - $firstDay) % 7;
 
         return $this->addDays((($value + 7 - $firstDay) % 7) - $dayOfWeek);
@@ -1393,7 +1413,16 @@ trait Date
      */
     public function getDaysFromStartOfWeek(int $weekStartsAt = null): int
     {
-        $firstDay = (int) ($weekStartsAt ?? $this->getTranslationMessage('first_day_of_week') ?? 0);
+        if ($weekStartsAt === null) {
+            $firstDay = $this->getTranslationMessage('first_day_of_week');
+            if ($firstDay === null) {
+                $firstDay = 0;
+            } else {
+                $firstDay = (int)$firstDay;
+            }
+        } else {
+            $firstDay = $weekStartsAt;
+        }
 
         return ($this->dayOfWeek + 7 - $firstDay) % 7;
     }
@@ -1438,7 +1467,7 @@ trait Date
             }
 
             return $date;
-        } catch (BadMethodCallException | ReflectionException $exception) {
+        } catch (BadMethodCallException/* | ReflectionException */$exception) {
             throw new UnknownUnitException($valueUnit, 0, $exception);
         }
     }
@@ -1952,9 +1981,6 @@ trait Date
      */
     public static function getIsoUnits()
     {
-        static $units = null;
-
-        if ($units === null) {
             $units = [
                 'OD' => ['getAltNumber', ['day']],
                 'OM' => ['getAltNumber', ['month']],
@@ -2069,7 +2095,6 @@ trait Date
                 'Z' => ['getOffsetString', []],
                 'ZZ' => ['getOffsetString', ['']],
             ];
-        }
 
         return $units;
     }
@@ -2239,7 +2264,7 @@ trait Date
                 } elseif (\is_array($sequence)) {
                     try {
                         $sequence = $this->{$sequence[0]}(...$sequence[1]);
-                    } catch (ReflectionException | InvalidArgumentException | BadMethodCallException $e) {
+                    } catch (/*ReflectionException | */InvalidArgumentException | BadMethodCallException $e) {
                         $sequence = '';
                     }
                 } elseif (\is_string($sequence)) {
@@ -2265,9 +2290,6 @@ trait Date
      */
     public static function getFormatsToIsoReplacements()
     {
-        static $replacements = null;
-
-        if ($replacements === null) {
             $replacements = [
                 'd' => true,
                 'D' => 'ddd',
@@ -2312,7 +2334,6 @@ trait Date
                 'U' => true,
                 'T' => true,
             ];
-        }
 
         return $replacements;
     }
@@ -2354,9 +2375,6 @@ trait Date
             $replacement = $replacements[$char];
 
             if ($replacement === true) {
-                static $contextReplacements = null;
-
-                if ($contextReplacements === null) {
                     $contextReplacements = [
                         'm' => 'MM',
                         'd' => 'DD',
@@ -2375,7 +2393,6 @@ trait Date
                         'i' => 'mm',
                         's' => 'ss',
                     ];
-                }
 
                 $isoFormat .= '['.$this->rawFormat($char).']';
                 $context .= $contextReplacements[$char] ?? ' ';

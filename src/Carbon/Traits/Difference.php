@@ -1157,7 +1157,10 @@ trait Difference
         );
         $format = array_merge($this->getCalendarFormats(), $formats)[$format];
         if ($format instanceof Closure) {
-            $format = $format($current, $other) ?? '';
+            $format = $format($current, $other);
+            if ($format === null) {
+                $format = '';
+            }
         }
 
         return $this->isoFormat((string) $format);

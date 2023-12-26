@@ -142,7 +142,8 @@ trait Creator
      */
     public static function instance($date)
     {
-        if ($date instanceof static) {
+        $tmp = static::class;
+        if ($date instanceof $tmp) {
             return clone $date;
         }
 
@@ -187,11 +188,11 @@ trait Creator
             return new static($time, $tz);
         } catch (Exception $exception) {
             // @codeCoverageIgnoreStart
-            try {
+//            try {
                 $date = @static::now($tz)->change($time);
-            } catch (DateMalformedStringException $ignoredException) {
-                $date = null;
-            }
+//            } catch (DateMalformedStringException $ignoredException) {
+//                $date = null;
+//            }
             // @codeCoverageIgnoreEnd
 
             if (!$date) {

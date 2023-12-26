@@ -297,6 +297,24 @@ class Factory
 
     public function __call($name, $arguments)
     {
+        if (defined('__BPC__')) {
+
+            $settings = $this->settings;
+
+            if ($settings && isset($settings['timezone'])) {
+                if (isset($arguments[0]) && \in_array($name, ['instance', 'make', 'create', 'parse'], true)) {
+                    if ($arguments[0] instanceof DateTimeInterface) {
+                        $settings['innerTimezone'] = $settings['timezone'];
+                    } elseif (\is_string($arguments[0]) && date_parse($arguments[0])['is_localtime']) {
+                        unset($settings['timezone'], $settings['innerTimezone']);
+                    }
+                } else {
+                    throw new \Exception('BPC TODO: fix tzParameters');
+                }
+            }
+
+        } else {
+
         $method = new ReflectionMethod($this->className, $name);
         $settings = $this->settings;
 
@@ -315,6 +333,8 @@ class Factory
                 array_splice($arguments, key($tzParameters), 0, [$settings['timezone']]);
                 unset($settings['timezone']);
             }
+        }
+
         }
 
         $result = $this->className::$name(...$arguments);

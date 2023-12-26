@@ -151,7 +151,7 @@ trait Units
      */
     public static function isModifiableUnit($unit)
     {
-        static $modifiableUnits = [
+        $modifiableUnits = [
             // @call addUnit
             'millennium',
             // @call addUnit
@@ -306,7 +306,7 @@ trait Units
             $value = $second;
         }
 
-        try {
+//        try {
             $date = $date->modify("$value $unit");
 
             if (isset($timeString)) {
@@ -314,9 +314,9 @@ trait Units
             } elseif (isset($canOverflow, $day) && $canOverflow && $day !== $date->day) {
                 $date = $date->modify('last day of previous month');
             }
-        } catch (DateMalformedStringException $ignoredException) { // @codeCoverageIgnore
-            $date = null; // @codeCoverageIgnore
-        }
+//        } catch (DateMalformedStringException $ignoredException) { // @codeCoverageIgnore
+//            $date = null; // @codeCoverageIgnore
+//        }
 
         if (!$date) {
             throw new UnitException('Unable to add unit '.var_export($originalArgs, true));

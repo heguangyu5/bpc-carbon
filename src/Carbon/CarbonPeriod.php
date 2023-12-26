@@ -377,7 +377,8 @@ class CarbonPeriod implements Iterator, Countable, JsonSerializable
      */
     public static function instance($period)
     {
-        if ($period instanceof static) {
+        $tmp = static::class;
+        if ($period instanceof $tmp) {
             return $period->copy();
         }
 
@@ -1315,7 +1316,8 @@ class CarbonPeriod implements Iterator, Countable, JsonSerializable
      */
     public function setStartDate($date, $inclusive = null)
     {
-        if (!$this->isInfiniteDate($date) && !($date = ([$this->dateClass, 'make'])($date))) {
+        $makeMethod = [$this->dateClass, 'make'];
+        if (!$this->isInfiniteDate($date) && !($date = $makeMethod($date))) {
             throw new InvalidPeriodDateException('Invalid start date.');
         }
 
@@ -1341,7 +1343,8 @@ class CarbonPeriod implements Iterator, Countable, JsonSerializable
      */
     public function setEndDate($date, $inclusive = null)
     {
-        if ($date !== null && !$this->isInfiniteDate($date) && !$date = ([$this->dateClass, 'make'])($date)) {
+        $makeMethod = [$this->dateClass, 'make'];
+        if ($date !== null && !$this->isInfiniteDate($date) && !$date = $makeMethod($date)) {
             throw new InvalidPeriodDateException('Invalid end date.');
         }
 
@@ -1440,7 +1443,8 @@ class CarbonPeriod implements Iterator, Countable, JsonSerializable
     public function rewind()
     {
         $this->key = 0;
-        $this->current = ([$this->dateClass, 'make'])($this->startDate);
+        $makeMethod = [$this->dateClass, 'make'];
+        $this->current = $makeMethod($this->startDate);
         $settings = $this->getSettings();
 
         if ($this->hasLocalTranslator()) {
@@ -1514,7 +1518,8 @@ class CarbonPeriod implements Iterator, Countable, JsonSerializable
             return $format($this);
         }
 
-        $translator = ([$this->dateClass, 'getTranslator'])();
+        $method = [$this->dateClass, 'getTranslator'];
+        $translator = $method();
 
         $parts = [];
 
@@ -1829,10 +1834,9 @@ class CarbonPeriod implements Iterator, Countable, JsonSerializable
             case 'millisecond':
             case 'microseconds':
             case 'microsecond':
-                return $this->setDateInterval((
-                    // Override default P1D when instantiating via fluent setters.
-                    [$this->isDefaultInterval ? new CarbonInterval('PT0S') : $this->dateInterval, $method]
-                )(...$parameters));
+                // Override default P1D when instantiating via fluent setters.
+                $f = [$this->isDefaultInterval ? new CarbonInterval('PT0S') : $this->dateInterval, $method];
+                return $this->setDateInterval($f(...$parameters));
         }
 
         $dateClass = $this->dateClass;
@@ -1909,7 +1913,10 @@ class CarbonPeriod implements Iterator, Countable, JsonSerializable
             return $this->getStartDate($rounding);
         }
 
-        $date = $this->getEndFromRecurrences() ?? $this->iterateUntilEnd();
+        $date = $this->getEndFromRecurrences();
+        if ($date === null) {
+            $date = $this->iterateUntilEnd();
+        }
 
         if ($date && $rounding) {
             $date = $date->avoidMutation()->round($this->getDateInterval(), $rounding);
@@ -2316,13 +2323,13 @@ class CarbonPeriod implements Iterator, Countable, JsonSerializable
      *
      * @return static
      */
-    public function round($precision = null, $function = 'round')
-    {
-        return $this->roundWith(
-            $precision ?? $this->getDateInterval()->setLocalTranslator(TranslatorImmutable::get('en'))->forHumans(),
-            $function
-        );
-    }
+//    public function round($precision = null, $function = 'round')
+//    {
+//        return $this->roundWith(
+//            $precision ?? $this->getDateInterval()->setLocalTranslator(TranslatorImmutable::get('en'))->forHumans(),
+//            $function
+//        );
+//    }
 
     /**
      * Round the current instance second with given precision if specified (else period interval is used).
@@ -2457,7 +2464,8 @@ class CarbonPeriod implements Iterator, Countable, JsonSerializable
         }
 
         return [function ($date) use ($method, $parameters) {
-            return ([$date, $method])(...$parameters);
+            $f = [$date, $method];
+            return $f(...$parameters);
         }, $method];
     }
 
@@ -2471,8 +2479,9 @@ class CarbonPeriod implements Iterator, Countable, JsonSerializable
      */
     protected function isCarbonPredicateMethod($callable)
     {
+        $f = [$this->dateClass, 'hasMacro'];
         return \is_string($callable) && str_starts_with($callable, 'is') &&
-            (method_exists($this->dateClass, $callable) || ([$this->dateClass, 'hasMacro'])($callable));
+            (method_exists($this->dateClass, $callable) || $f($callable));
     }
 
     /**
@@ -2594,7 +2603,8 @@ class CarbonPeriod implements Iterator, Countable, JsonSerializable
      */
     protected function prepareForReturn(CarbonInterface $date)
     {
-        $date = ([$this->dateClass, 'make'])($date);
+        $makeMethod = [$this->dateClass, 'make'];
+        $date = $makeMethod($date);
 
         if ($this->timezone) {
             $date = $date->setTimezone($this->timezone);
@@ -2733,7 +2743,8 @@ class CarbonPeriod implements Iterator, Countable, JsonSerializable
 
     private static function setDefaultParameters(array &$parameters, array $defaults): void
     {
-        foreach ($defaults as [$index, $name, $value]) {
+        foreach ($defaults as $item) {
+            [$index, $name, $value] = $item;
             if (!\array_key_exists($index, $parameters) && !\array_key_exists($name, $parameters)) {
                 $parameters[$index] = $value;
             }
